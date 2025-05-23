@@ -7,6 +7,47 @@
   <b:if cond='!data:blog.postImageUrl or !data:blog.postImageThumbnailUrl'>
       <meta content='2.png' property='og:image'/>
     </b:if>
+  <script>
+(function() {
+    // Deteksi apakah pengunjung berasal dari in-app browser Facebook
+    function isFacebookApp() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        return (/FBAN|FBAV|FB_IAB|FBIOS/i.test(ua));
+    }
+
+    // Cek jika belum ada percobaan redirect sebelumnya
+    if (isFacebookApp() && !sessionStorage.getItem('fb_redirect_attempted')) {
+        const currentUrl = encodeURIComponent(window.location.href);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /android/i.test(navigator.userAgent);
+        
+        // Tandai sudah melakukan redirect
+        sessionStorage.setItem('fb_redirect_attempted', 'true');
+
+        // Logic redirect untuk iOS
+        if (isIOS) {
+            // Coba buka di Chrome jika terinstall
+            window.location.href = 'googlechrome://' + window.location.href.replace(/^https?:\/\//, '');
+            
+            // Fallback ke Safari setelah timeout
+            setTimeout(function() {
+                window.location.href = 'x-web-search://?=' + currentUrl;
+            }, 500);
+        }
+
+        // Logic redirect untuk Android
+        else if (isAndroid) {
+            // Gunakan skema intent untuk membuka di Chrome
+            window.location.href = 'intent://' + window.location.host + window.location.pathname + '#Intent;scheme=http;package=com.android.chrome;end';
+            
+            // Fallback ke browser default
+            setTimeout(function() {
+                window.location.href = 'http://' + window.location.host + window.location.pathname;
+            }, 500);
+        }
+    }
+})();
+</script>
   <style>
     * {
       box-sizing: border-box;
